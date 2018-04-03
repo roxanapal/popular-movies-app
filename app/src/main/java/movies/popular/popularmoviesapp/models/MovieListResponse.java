@@ -12,7 +12,7 @@ import java.util.List;
 public class MovieListResponse implements Parcelable{
     private List<Movie> results;
 
-    protected MovieListResponse(Parcel in) {
+    private MovieListResponse(Parcel in) {
         results = in.createTypedArrayList(Movie.CREATOR);
     }
 
@@ -23,7 +23,6 @@ public class MovieListResponse implements Parcelable{
     public void setResults(List<Movie> results) {
         this.results = results;
     }
-
 
     public static final Creator<MovieListResponse> CREATOR = new Creator<MovieListResponse>() {
         @Override

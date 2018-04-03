@@ -50,7 +50,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public void onBindViewHolder(@NonNull final MovieViewHolder holder, final int position) {
-        Movie movie = movieList.get(position);
+        final Movie movie = movieList.get(position);
         Picasso.get()
                 .load(movie.getPosterUrl())
                 .into(holder.ivMoviePoster);
@@ -59,7 +59,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(context, DetailsActivity.class);
-                intent.putExtra(DetailsActivity.EXTRA_POSITION, position);
+                intent.putExtra(DetailsActivity.EXTRA_MOVIE, movie);
                 context.startActivity(intent);
             }
         });

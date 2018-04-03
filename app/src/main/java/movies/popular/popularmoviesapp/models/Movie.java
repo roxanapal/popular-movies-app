@@ -10,7 +10,7 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class Movie implements Parcelable {
-    private final String POSTER_BASE_URL = "http://image.tmdb.org/t/p/w500";
+    private final String IMG_BASE_URL = "http://image.tmdb.org/t/p/w500";
 
     private long id;
     @SerializedName("original_title")
@@ -18,19 +18,23 @@ public class Movie implements Parcelable {
     private String overview;
     @SerializedName("poster_path")
     private String poster;
-    private String runtime;
+    @SerializedName("backdrop_path")
+    private String backdropPath;
+    @SerializedName("release_date")
+    private String releaseDate;
     @SerializedName("vote_average")
     private String voteAverage;
 
     public Movie() {
     }
 
-    public Movie(long id, String originalTitle, String overview, String poster, String runtime, String voteAverage) {
+    public Movie(long id, String originalTitle, String overview, String poster, String backdropPath, String releaseDate, String voteAverage) {
         this.id = id;
         this.originalTitle = originalTitle;
         this.overview = overview;
         this.poster = poster;
-        this.runtime = runtime;
+        this.backdropPath = backdropPath;
+        this.releaseDate = releaseDate;
         this.voteAverage = voteAverage;
     }
 
@@ -39,7 +43,8 @@ public class Movie implements Parcelable {
         originalTitle = in.readString();
         overview = in.readString();
         poster = in.readString();
-        runtime = in.readString();
+        backdropPath = in.readString();
+        releaseDate = in.readString();
         voteAverage = in.readString();
     }
 
@@ -83,20 +88,24 @@ public class Movie implements Parcelable {
         return poster;
     }
 
-    public String getPosterUrl() {
-        return POSTER_BASE_URL + poster;
-    }
-
     public void setPoster(String poster) {
         this.poster = poster;
     }
 
-    public String getRuntime() {
-        return runtime;
+    public String getBackdropPath() {
+        return backdropPath;
     }
 
-    public void setRuntime(String runtime) {
-        this.runtime = runtime;
+    public void setBackdropPath(String backdropPath) {
+        this.backdropPath = backdropPath;
+    }
+
+    public String getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(String releaseDate) {
+        this.releaseDate = releaseDate;
     }
 
     public String getVoteAverage() {
@@ -118,7 +127,16 @@ public class Movie implements Parcelable {
         dest.writeString(originalTitle);
         dest.writeString(overview);
         dest.writeString(poster);
-        dest.writeString(runtime);
+        dest.writeString(backdropPath);
+        dest.writeString(releaseDate);
         dest.writeString(voteAverage);
+    }
+
+    public String getPosterUrl() {
+        return IMG_BASE_URL + poster;
+    }
+
+    public String getBackdropPathUrl() {
+        return IMG_BASE_URL + backdropPath;
     }
 }
