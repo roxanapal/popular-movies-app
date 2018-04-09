@@ -1,20 +1,27 @@
 package movies.popular.popularmoviesapp;
 
 import android.content.Intent;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import movies.popular.popularmoviesapp.models.Movie;
+import movies.popular.popularmoviesapp.models.VideoListResponse;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DetailsActivity extends AppCompatActivity {
 
@@ -42,6 +49,12 @@ public class DetailsActivity extends AppCompatActivity {
     @BindView(R.id.details_vote_average)
     TextView tvVoteAverage;
 
+    @BindView(R.id.details_recycler_view_videos)
+    RecyclerView rvVideos;
+
+    private VideoAdapter videoAdapter;
+    private boolean isFavorite = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,14 +68,56 @@ public class DetailsActivity extends AppCompatActivity {
         Intent intent = getIntent();
         if (intent == null) {
             errorMessage();
+            return;
         }
 
         Movie movie = intent.getParcelableExtra(EXTRA_MOVIE);
-        if(movie.getId() == DEFAULT_ID){
+        if (movie.getId() == DEFAULT_ID) {
             errorMessage();
             return;
         }
 
+        setMovieInfo(movie);
+
+        initRecyclerView();
+
+        getVideos(movie.getId());
+    }
+
+
+    private void errorMessage() {
+        Toast.makeText(this, R.string.details_data_error, Toast.LENGTH_SHORT).show();
+    }
+
+    private void initRecyclerView() {
+        videoAdapter = new VideoAdapter(this);
+        rvVideos.setLayoutManager(new LinearLayoutManager(this));
+        rvVideos.setAdapter(videoAdapter);
+    }
+
+    private void getVideos(long id) {
+        MovieService service = NetworkUtils.getMovieClient().create(MovieService.class);
+        Call<VideoListResponse> videoCall = service.getVideosFromAMovie(id, BuildConfig.MOVIE_API_KEY);
+
+        videoCall.enqueue(new Callback<VideoListResponse>() {
+            @Override
+            public void onResponse(Call<VideoListResponse> call, Response<VideoListResponse> response) {
+                if (response == null)
+                    return;
+
+                VideoListResponse videoCallResponse = response.body();
+                videoAdapter.setMovieList(videoCallResponse.getResults());
+                videoAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onFailure(Call<VideoListResponse> call, Throwable t) {
+                Toast.makeText(DetailsActivity.this, "Error loading videos.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setMovieInfo(Movie movie) {
         tvTitle.setText(movie.getOriginalTitle());
         Picasso.get()
                 .load(movie.getBackdropPathUrl())
@@ -75,7 +130,13 @@ public class DetailsActivity extends AppCompatActivity {
         tvVoteAverage.setText(movie.getVoteAverage());
     }
 
-    private void errorMessage(){
-        Toast.makeText(this, R.string.details_data_error, Toast.LENGTH_SHORT).show();
+    @OnClick(R.id.details_btn_favorite_star)
+    public void addMovieToFavorites(ImageView imageView) {
+        imageView.setImageDrawable(ActivityCompat.getDrawable(this,
+                isFavorite
+                        ? R.drawable.star
+                        : R.drawable.star_selected));
+        isFavorite = !isFavorite;
     }
+
 }
