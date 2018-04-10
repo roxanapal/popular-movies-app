@@ -12,18 +12,21 @@ public class Video implements Parcelable {
 
     private String key;
     private String name;
+    private String type;
 
     public Video() {
     }
 
-    public Video(String key, String name) {
+    public Video(String key, String name, String type) {
         this.key = key;
         this.name = name;
+        this.type = type;
     }
 
     protected Video(Parcel in) {
         key = in.readString();
         name = in.readString();
+        type = in.readString();
     }
 
     public static final Creator<Video> CREATOR = new Creator<Video>() {
@@ -58,6 +61,14 @@ public class Video implements Parcelable {
         return VIDEO_BASE_URL + key;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -65,8 +76,8 @@ public class Video implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(VIDEO_BASE_URL);
         dest.writeString(key);
         dest.writeString(name);
+        dest.writeString(type);
     }
 }

@@ -18,6 +18,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import movies.popular.popularmoviesapp.models.Movie;
+import movies.popular.popularmoviesapp.models.ReviewListResponse;
 import movies.popular.popularmoviesapp.models.VideoListResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -49,10 +50,18 @@ public class DetailsActivity extends AppCompatActivity {
     @BindView(R.id.details_vote_average)
     TextView tvVoteAverage;
 
+    @BindView(R.id.details_videos_label)
+    TextView tvVideosLabel;
+
     @BindView(R.id.details_recycler_view_videos)
     RecyclerView rvVideos;
 
+    @BindView(R.id.details_recycler_view_reviews)
+    RecyclerView rvReviews;
+
     private VideoAdapter videoAdapter;
+    private ReviewAdapter reviewAdapter;
+
     private boolean isFavorite = false;
 
     @Override
@@ -79,9 +88,11 @@ public class DetailsActivity extends AppCompatActivity {
 
         setMovieInfo(movie);
 
-        initRecyclerView();
+        initRecyclerViewVideos();
+        initRecyclerViewReviews();
 
         getVideos(movie.getId());
+        getReviews(movie.getId());
     }
 
 
@@ -89,10 +100,16 @@ public class DetailsActivity extends AppCompatActivity {
         Toast.makeText(this, R.string.details_data_error, Toast.LENGTH_SHORT).show();
     }
 
-    private void initRecyclerView() {
+    private void initRecyclerViewVideos() {
         videoAdapter = new VideoAdapter(this);
         rvVideos.setLayoutManager(new LinearLayoutManager(this));
         rvVideos.setAdapter(videoAdapter);
+    }
+
+    private void initRecyclerViewReviews() {
+        reviewAdapter = new ReviewAdapter(this);
+        rvReviews.setLayoutManager(new LinearLayoutManager(this));
+        rvReviews.setAdapter(reviewAdapter);
     }
 
     private void getVideos(long id) {
@@ -106,13 +123,37 @@ public class DetailsActivity extends AppCompatActivity {
                     return;
 
                 VideoListResponse videoCallResponse = response.body();
-                videoAdapter.setMovieList(videoCallResponse.getResults());
+                videoAdapter.setVideoList(videoCallResponse.getResults());
+                if(videoAdapter.getVideoList().isEmpty()){
+                    tvVideosLabel.setVisibility(View.GONE);
+                }
                 videoAdapter.notifyDataSetChanged();
             }
 
             @Override
             public void onFailure(Call<VideoListResponse> call, Throwable t) {
                 Toast.makeText(DetailsActivity.this, "Error loading videos.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void getReviews(long id){
+        MovieService service = NetworkUtils.getMovieClient().create(MovieService.class);
+        final Call<ReviewListResponse> reviewCall = service.getReviewsFromAMovie(id, BuildConfig.MOVIE_API_KEY);
+        reviewCall.enqueue(new Callback<ReviewListResponse>() {
+            @Override
+            public void onResponse(Call<ReviewListResponse> call, Response<ReviewListResponse> response) {
+                if(response == null){
+                    return;
+                }
+                ReviewListResponse reviewListResponse = response.body();
+                reviewAdapter.setReviewList(reviewListResponse.getResults());
+                reviewAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onFailure(Call<ReviewListResponse> call, Throwable t) {
+                Toast.makeText(DetailsActivity.this, "Error loading reviews.", Toast.LENGTH_SHORT).show();
             }
         });
     }

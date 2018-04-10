@@ -33,10 +33,18 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         this.context = context;
     }
 
-    public void setMovieList(List<Video> videoList) {
+    public void setVideoList(List<Video> videoList) {
         this.videoList.clear();
-        this.videoList.addAll(videoList);
+        for(Video video : videoList){
+            if(video.getType().equals("Trailer")){
+                this.videoList.add(video);
+            }
+        }
         notifyDataSetChanged();
+    }
+
+    public List<Video> getVideoList() {
+        return videoList;
     }
 
     @NonNull
