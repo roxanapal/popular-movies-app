@@ -16,6 +16,9 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import butterknife.BindView;
@@ -73,6 +76,12 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     public void addMovieToList(Movie movie) {
         synchronized (this) {
             movieList.add(movie);
+            Collections.sort(movieList, new Comparator<Movie>() {
+                @Override
+                public int compare(Movie o1, Movie o2) {
+                    return o1.getOriginalTitle().compareToIgnoreCase(o2.getOriginalTitle());
+                }
+            });
             notifyDataSetChanged();
         }
     }

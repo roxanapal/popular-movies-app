@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     Toolbar toolbar;
 
     private MovieAdapter adapter;
+    private boolean isLoaderFinished = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         setSpinnerAdapter();
         toolbar.setNavigationIcon(R.drawable.ic_movie_black_24px);
 
-        if(savedInstanceState != null) {
+        if (savedInstanceState != null) {
             int position = savedInstanceState.getInt(SPINNER_POSITION_KEY, 0);
             spnListType.setSelection(position);
         } else {
@@ -103,8 +104,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private void getDataByPosition(int position) {
         if (position == 0) {
             getPopularMovies();
+            isLoaderFinished = true;
         } else if (position == 1) {
             getTopRatedMovies();
+            isLoaderFinished = true;
         } else if (position == 2) {
             getFavoritesMovies();
         }
@@ -114,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         movieCall.enqueue(new Callback<MovieListResponse>() {
             @Override
             public void onResponse(Call<MovieListResponse> call, Response<MovieListResponse> response) {
-                if (response == null)
+                if (response == null || response.body() == null)
                     return;
 
                 MovieListResponse movieListResponse = response.body();
@@ -169,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                             null,
                             null,
                             null,
-                            null);
+                             MovieContract.MovieEntry.COLUMN_TITLE +" ASC");
 
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to asynchronously load data.");
@@ -187,14 +190,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
-        adapter.clearList();
-        for (int i = 0; i < data.getCount(); i++) {
-            data.moveToPosition(i);
-            long movieId = data.getLong(data.getColumnIndex(MovieContract.MovieEntry._ID));
+        if (isLoaderFinished) {
+            adapter.clearList();
+            for (int i = 0; i < data.getCount(); i++) {
+                data.moveToPosition(i);
+                long movieId = data.getLong(data.getColumnIndex(MovieContract.MovieEntry._ID));
 
-            MovieService service = NetworkUtils.getMovieClient().create(MovieService.class);
-            Call<Movie> movieCall = service.getMovieForId(movieId, BuildConfig.MOVIE_API_KEY);
-            getMovieForId(movieCall);
+                MovieService service = NetworkUtils.getMovieClient().create(MovieService.class);
+                Call<Movie> movieCall = service.getMovieForId(movieId, BuildConfig.MOVIE_API_KEY);
+                getMovieForId(movieCall);
+            }
+            isLoaderFinished = false;
         }
     }
 
@@ -218,7 +224,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-        adapter.clearList();
+        if (spnListType != null && spnListType.getSelectedItemPosition() == 2) {
+            isLoaderFinished = true;
+            adapter.clearList();
+        }
     }
 
     @Override
@@ -227,6 +236,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         intent.putExtra(EXTRA_MOVIE, movie);
         startActivity(intent);
     }
+
 
     @Override
     protected void onStart() {
@@ -237,12 +247,18 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     protected void onResume() {
         super.onResume();
+        if (spnListType != null && spnListType.getSelectedItemPosition() == 2) {
+            isLoaderFinished = true;
+            getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
+        }
         Log.i(TAG, "onResume");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        isLoaderFinished = true;
+        getSupportLoaderManager().destroyLoader(MOVIE_LOADER_ID);
         Log.i(TAG, "onPause");
     }
 
