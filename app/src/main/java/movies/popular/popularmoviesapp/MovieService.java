@@ -1,9 +1,9 @@
 package movies.popular.popularmoviesapp;
 
-import java.util.List;
-
 import movies.popular.popularmoviesapp.models.Movie;
 import movies.popular.popularmoviesapp.models.MovieListResponse;
+import movies.popular.popularmoviesapp.models.ReviewListResponse;
+import movies.popular.popularmoviesapp.models.VideoListResponse;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
@@ -21,5 +21,11 @@ public interface MovieService {
     Call<MovieListResponse> getTopRatedMovies(@Query("api_key") String myApiKey);
 
     @GET("3/movie/{id}")
-    Call<Movie> getMovieById(@Path("id") long id, @Query("api_key") String myApiKey);
+    Call<Movie> getMovieForId(@Path("id") long id, @Query("api_key") String myApiKey);
+
+    @GET("3/movie/{id}/videos")
+    Call<VideoListResponse> getVideosFromAMovie(@Path("id") long id, @Query("api_key") String myApiKey);
+
+    @GET("3/movie/{id}/reviews")
+    Call<ReviewListResponse> getReviewsFromAMovie(@Path("id") long id, @Query("api_key") String myApiKey);
 }
