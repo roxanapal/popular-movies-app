@@ -2,6 +2,7 @@ package movies.popular.popularmoviesapp;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.media.midi.MidiOutputPort;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -19,6 +20,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import movies.popular.popularmoviesapp.data.MovieContract;
 import movies.popular.popularmoviesapp.models.Movie;
 
 /**
@@ -27,11 +29,11 @@ import movies.popular.popularmoviesapp.models.Movie;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
+    private final Listener listener;
     private List<Movie> movieList = new ArrayList<>();
-    Context context;
 
-    public MovieAdapter(Context context) {
-        this.context = context;
+    public MovieAdapter(Listener listener) {
+        this.listener = listener;
     }
 
     public void setMovieList(List<Movie> movieList) {
@@ -43,7 +45,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     @NonNull
     @Override
     public MovieViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(context);
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         View row = inflater.inflate(R.layout.item_movie, parent, false);
         return new MovieViewHolder(row);
     }
@@ -58,9 +60,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         holder.ivMoviePoster.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(context, DetailsActivity.class);
-                intent.putExtra(DetailsActivity.EXTRA_MOVIE, movie);
-                context.startActivity(intent);
+                listener.openDetailsActivity(movie);
             }
         });
     }
@@ -68,6 +68,18 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     @Override
     public int getItemCount() {
         return movieList.size();
+    }
+
+    public void addMovieToList(Movie movie) {
+        synchronized (this) {
+            movieList.add(movie);
+            notifyDataSetChanged();
+        }
+    }
+
+    public void clearList() {
+        movieList.clear();
+        notifyDataSetChanged();
     }
 
     public class MovieViewHolder extends RecyclerView.ViewHolder {
@@ -82,5 +94,9 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             super(itemView);
             ButterKnife.bind(this, itemView);
         }
+    }
+
+    public interface Listener {
+        void openDetailsActivity(Movie movie);
     }
 }

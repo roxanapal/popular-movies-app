@@ -3,6 +3,7 @@
     <string-array name="list_type_values">
         <item>Most Popular</item>
         <item>Top Rated</item>
+        <item>Favorites</item>
     </string-array>
 
 </resources>

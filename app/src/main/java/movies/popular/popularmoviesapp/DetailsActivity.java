@@ -1,12 +1,18 @@
 package movies.popular.popularmoviesapp;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -17,6 +23,8 @@ import com.squareup.picasso.Picasso;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import movies.popular.popularmoviesapp.data.MovieContract;
+import movies.popular.popularmoviesapp.models.Constants;
 import movies.popular.popularmoviesapp.models.Movie;
 import movies.popular.popularmoviesapp.models.ReviewListResponse;
 import movies.popular.popularmoviesapp.models.VideoListResponse;
@@ -24,9 +32,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DetailsActivity extends AppCompatActivity {
+public class DetailsActivity extends AppCompatActivity implements Constants {
 
-    public static final String EXTRA_MOVIE = "movie";
     private static final int DEFAULT_ID = -1;
 
     @BindView(R.id.details_toolbar)
@@ -59,8 +66,12 @@ public class DetailsActivity extends AppCompatActivity {
     @BindView(R.id.details_recycler_view_reviews)
     RecyclerView rvReviews;
 
+    @BindView(R.id.details_btn_favorite_star)
+    ImageView ivStar;
+
     private VideoAdapter videoAdapter;
     private ReviewAdapter reviewAdapter;
+    private Movie movie;
 
     private boolean isFavorite = false;
 
@@ -80,11 +91,19 @@ public class DetailsActivity extends AppCompatActivity {
             return;
         }
 
-        Movie movie = intent.getParcelableExtra(EXTRA_MOVIE);
-        if (movie.getId() == DEFAULT_ID) {
+        if (intent.hasExtra(EXTRA_MOVIE)){
+            movie = intent.getParcelableExtra(EXTRA_MOVIE);
+        }
+        else if (savedInstanceState != null && savedInstanceState.getParcelable(EXTRA_MOVIE) != null){
+            movie = savedInstanceState.getParcelable(EXTRA_MOVIE);
+        }
+
+        if (movie == null || movie.getId() == DEFAULT_ID) {
             errorMessage();
             return;
         }
+
+        checkIfIsFavorite(movie);
 
         setMovieInfo(movie);
 
@@ -93,6 +112,28 @@ public class DetailsActivity extends AppCompatActivity {
 
         getVideos(movie.getId());
         getReviews(movie.getId());
+    }
+
+/*
+    @Override
+    public void onBackPressed() {
+        finish();
+    }
+*/
+
+    private void checkIfIsFavorite(Movie movie) {
+        Uri uri = MovieContract.MovieEntry.CONTENT_URI .buildUpon().appendPath(String.valueOf(movie.getId())).build();
+        Cursor cursor = getContentResolver().query(uri,
+                null,
+                null,
+                null,
+                null);
+        if(cursor.getCount() == 0) {
+            isFavorite = false;
+        } else {
+            isFavorite = true;
+            ivStar.setImageDrawable(ActivityCompat.getDrawable(this, R.drawable.star_selected));
+        }
     }
 
 
@@ -172,12 +213,50 @@ public class DetailsActivity extends AppCompatActivity {
     }
 
     @OnClick(R.id.details_btn_favorite_star)
-    public void addMovieToFavorites(ImageView imageView) {
-        imageView.setImageDrawable(ActivityCompat.getDrawable(this,
-                isFavorite
-                        ? R.drawable.star
-                        : R.drawable.star_selected));
+    public void addOrDeleteFavoriteMovie(ImageView imageView) {
+        if(!isFavorite) {
+            imageView.setImageDrawable(ActivityCompat.getDrawable(this, R.drawable.star_selected));
+            ContentValues contentValues = new ContentValues();
+
+            contentValues.put(MovieContract.MovieEntry._ID, movie.getId());
+            contentValues.put(MovieContract.MovieEntry.COLUMN_TITLE, movie.getOriginalTitle());
+
+            Uri uri = getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, contentValues);
+
+            if(uri != null) {
+                Toast.makeText(getBaseContext(), uri.toString(), Toast.LENGTH_LONG).show();
+            }
+
+        } else {
+            imageView.setImageDrawable(ActivityCompat.getDrawable(this, R.drawable.star));
+            String stringId = Long.toString(movie.getId());
+            Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+            uri = uri.buildUpon().appendPath(stringId).build();
+
+            getContentResolver().delete(uri, null, null);
+        }
         isFavorite = !isFavorite;
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(EXTRA_MOVIE, movie);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        movie = savedInstanceState.getParcelable(EXTRA_MOVIE);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home){
+            onBackPressed();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }

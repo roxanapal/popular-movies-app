@@ -1,5 +1,6 @@
 package movies.popular.popularmoviesapp;
 
+import movies.popular.popularmoviesapp.models.Movie;
 import movies.popular.popularmoviesapp.models.MovieListResponse;
 import movies.popular.popularmoviesapp.models.ReviewListResponse;
 import movies.popular.popularmoviesapp.models.VideoListResponse;
@@ -18,6 +19,9 @@ public interface MovieService {
 
     @GET("3/movie/top_rated")
     Call<MovieListResponse> getTopRatedMovies(@Query("api_key") String myApiKey);
+
+    @GET("3/movie/{id}")
+    Call<Movie> getMovieForId(@Path("id") long id, @Query("api_key") String myApiKey);
 
     @GET("3/movie/{id}/videos")
     Call<VideoListResponse> getVideosFromAMovie(@Path("id") long id, @Query("api_key") String myApiKey);

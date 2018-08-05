@@ -8,4 +8,5 @@
     <string name="details_tv_favorite_label">Set as favorite:</string>
     <string name="details_tv_videos_label">Trailers</string>
     <string name="details_tv_reviews_label">Reviews</string>
+    <string name="menu_favorites">Favorites</string>
 </resources>
